@@ -1,25 +1,92 @@
 pipeline {
-  agent none
-  stages {
-    stage('Back-end') {
-      agent {
+    // Define a Dockerized Jenkins agent with Maven
+    agent {
         docker { image 'maven:3.8.1-adoptopenjdk-11' }
-      }
-      steps {
-        // Navigate to my-first-pipeline to run Maven targets
-        dir('my-first-pipeline') {
-          sh 'mvn clean compile'
-          sh 'mvn exec:java -Dexec.mainClass="com.example.HelloWorld"'
+    }
+    stages {
+        stage('Setup and Build') {
+            steps {
+                echo 'Setting up the environment and building the project...'
+                // Compile the Java project
+                dir('my-first-pipeline') {
+                    sh 'mvn clean compile'
+                }
+            }
         }
-      }
+
+        stage('Run Hello World') {
+            steps {
+                echo 'Running Hello World application...'
+                // Execute the HelloWorld Java program
+                dir('my-first-pipeline') {
+                    sh 'mvn exec:java -Dexec.mainClass="com.example.HelloWorld"'
+                }
+            }
+        }
+
+        stage('Parallel Testing with Different Images') {
+            parallel {
+                stage('Test with Node.js') {
+                    agent {
+                        docker { image 'node:16-alpine' }
+                    }
+                    steps {
+                        echo 'Testing Node.js environment...'
+                        sh 'node --version'
+                        // Add additional Node.js commands if needed
+                    }
+                }
+
+                stage('Test with Python') {
+                    agent {
+                        docker { image 'python:3.9-alpine' }
+                    }
+                    steps {
+                        echo 'Testing Python environment...'
+                        sh 'python --version'
+                        // Add additional Python commands if needed
+                    }
+                }
+            }
+        }
+
+        stage('Multi-Image Build and Run') {
+            stages {
+                stage('Build with Maven') {
+                    agent {
+                        docker { image 'maven:3.8.1-adoptopenjdk-11' }
+                    }
+                    steps {
+                        echo 'Building the Java project with Maven...'
+                        dir('my-first-pipeline') {
+                            sh 'mvn clean compile'
+                        }
+                    }
+                }
+                stage('Run with OpenJDK 11') {
+                    agent {
+                        docker { image 'openjdk:11' }
+                    }
+                    steps {
+                        echo 'Running the Hello World program with OpenJDK 11...'
+                        dir('my-first-pipeline') {
+                            sh 'java -cp target/classes com.example.HelloWorld'
+                        }
+                    }
+                }
+                stage('Run with OpenJDK 8') {
+                    agent {
+                        docker { image 'openjdk:8' }
+                    }
+                    steps {
+                        echo 'Running the Hello World program with OpenJDK 8...'
+                        dir('my-first-pipeline') {
+                            sh 'java -cp target/classes com.example.HelloWorld'
+                        }
+                    }
+                }
+            }
+        }
     }
-    stage('Front-end') {
-      agent {
-        docker { image 'node:16-alpine' }
-      }
-      steps {
-        sh 'node --version'
-      }
-    }
-  }
 }
+
