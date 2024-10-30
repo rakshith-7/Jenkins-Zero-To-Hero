@@ -6,8 +6,8 @@ pipeline {
         docker { image 'maven:3.8.1-adoptopenjdk-11' }
       }
       steps {
-        // Run Maven targets
-        dir('hello-world') {
+        // Navigate to my-first-pipeline to run Maven targets
+        dir('my-first-pipeline') {
           sh 'mvn clean compile'
           sh 'mvn exec:java -Dexec.mainClass="com.example.HelloWorld"'
         }
